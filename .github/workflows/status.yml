@@ -1,0 +1,36 @@
+ymlname: SCUM Nexus Status
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  send-status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch & Send to Discord
+        run: |
+          DATA=$(curl -s "https://api.battlemetrics.com/servers/39279411")
+          STATUS=$(echo $DATA | python3 -c "import sys,json; d=json.load(sys.stdin)['data']['attributes']; print(d['status'])")
+          PLAYERS=$(echo $DATA | python3 -c "import sys,json; d=json.load(sys.stdin)['data']['attributes']; print(d['players'])")
+          MAX=$(echo $DATA | python3 -c "import sys,json; d=json.load(sys.stdin)['data']['attributes']; print(d['maxPlayers'])")
+          RANK=$(echo $DATA | python3 -c "import sys,json; d=json.load(sys.stdin)['data']['attributes']; print(d['rank'])")
+          NAME=$(echo $DATA | python3 -c "import sys,json; d=json.load(sys.stdin)['data']['attributes']; print(d['name'])")
+          IP=$(echo $DATA | python3 -c "import sys,json; d=json.load(sys.stdin)['data']['attributes']; print(d['ip'])")
+          PORT=$(echo $DATA | python3 -c "import sys,json; d=json.load(sys.stdin)['data']['attributes']; print(d['port'])")
+          
+          if [ "$STATUS" = "online" ]; then
+            EMOJI="🟢"
+            COLOR=3066993
+          else
+            EMOJI="🔴"
+            COLOR=15158332
+          fi
+
+          FILLED=$(python3 -c "print('█' * round($PLAYERS/$MAX*10) + '░' * (10 - round($PLAYERS/$MAX*10)))")
+          NOW=$(date +'%H:%M')
+
+          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"username\":\"SCUM Nexus Status\",\"embeds\":[{\"title\":\"$EMOJI $NAME\",\"color\":$COLOR,\"fields\":[{\"name\":\"Joueurs\",\"value\":\"\`$PLAYERS / $MAX\`\n$FILLED\",\"inline\":true},{\"name\":\"Rang BattleMetrics\",\"value\":\"\`#$RANK\`\",\"inline\":true},{\"name\":\"Adresse\",\"value\":\"\`$IP:$PORT\`\",\"inline\":true}],\"footer\":{\"text\":\"Mis à jour à $NOW\"}}]}"
