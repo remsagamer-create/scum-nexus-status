@@ -26,7 +26,7 @@
   <div class="row"><span class="label">Statut</span><span class="value" id="s-status">Chargement...</span></div>
   <div class="row"><span class="label">Joueurs</span><span class="value" id="s-players">—</span></div>
   <div class="row"><span class="label">Rang BattleMetrics</span><span class="value" id="s-rank">—</span></div>
-  <div class="row"><span class="label">Prochain restart</span><span class="value" id="s-restart">—</span></div>
+  <div class="row"><span class="label">Adresse</span><span class="value" id="s-ip">—</span></div>
 </div>
 
 <div id="log">Initialisation...</div>
@@ -34,7 +34,6 @@
 <script>
 const SERVER_ID = '39279411';
 const WEBHOOK = 'https://discord.com/api/webhooks/1511820291775401984/RlL0eO0QQ2vbJv4RxGzr0qT3YVFhJsPMwWNF27JR9dfEkR5JmOJNwDdd1-HlShma938_';
-const RESTART_TIME = '20:00';
 const INTERVAL_MS = 5 * 60 * 1000;
 
 function buildBar(current, max) {
@@ -56,13 +55,15 @@ async function run() {
     const maxPlayers = attr.maxPlayers ?? '?';
     const rank = attr.rank ?? '?';
     const name = attr.name ?? 'SCUM Nexus';
+    const ip = attr.ip ?? '?';
+    const port = attr.port ?? '?';
     const now = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
     document.getElementById('s-status').textContent = online ? 'En ligne' : 'Hors ligne';
     document.getElementById('s-status').className = 'value ' + (online ? 'online' : 'offline');
     document.getElementById('s-players').textContent = `${players} / ${maxPlayers}`;
     document.getElementById('s-rank').textContent = `#${rank}`;
-    document.getElementById('s-restart').textContent = RESTART_TIME;
+    document.getElementById('s-ip').textContent = `${ip}:${port}`;
 
     const bar = buildBar(players, maxPlayers);
 
@@ -74,7 +75,7 @@ async function run() {
         fields: [
           { name: 'Joueurs', value: `\`${players} / ${maxPlayers}\`\n${bar}`, inline: true },
           { name: 'Rang BattleMetrics', value: `\`#${rank}\``, inline: true },
-          { name: 'Prochain restart', value: `\`${RESTART_TIME}\``, inline: true },
+          { name: 'Adresse', value: `\`${ip}:${port}\``, inline: true },
         ],
         footer: { text: `Mis à jour à ${now}` }
       }]
